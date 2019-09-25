@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+  app:
+    image: rust-docker:latest
+    build:
+      context: './'
+      dockerfile: '.docker/App.Dockerfile'
+    container_name: 'rust-docker-proxy'
+
+  proxy:
+    image: proxy-docker:latest
+    build:
+      context: './'
+      dockerfile: '.docker/Proxy.Dockerfile'
+    depends_on:
+      - app
+    ports:
+      - '80:80'
+    links:
+      - app
+    container_name: 'rust-docker-proxy'
