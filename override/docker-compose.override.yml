@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  backend:
+    command: 'node main.js'
+
+  frontend:
+    volumes:
+      - './frontend2:/usr/app/test'
