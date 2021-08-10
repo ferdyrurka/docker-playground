@@ -1,0 +1,23 @@
+version: '3.7'
+services:
+  nginx:
+    build:
+      context: './.docker'
+      dockerfile: 'nginx.Dockerfile'
+    image: playground-nginx:1.0.0
+    environment:
+      TZ: Europe/Warsaw
+    ports:
+      - '8000:80'
+    volumes:
+      - './:/app'
+      - './.docker/app.conf:/etc/nginx/sites-enabled/app.conf'
+      - './.docker/nginx.conf:/etc/nginx/nginx.conf'
+    links:
+      - fpm
+
+  fpm:
+    image: php:8.0.9-fpm-alpine3.14
+    volumes:
+      - './:/app'
+      - './.docker/php.ini:/usr/local/etc/php/conf.d/custom.ini'
