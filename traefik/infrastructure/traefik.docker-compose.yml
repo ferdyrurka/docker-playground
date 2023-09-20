@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+
+  traefik:
+    image: traefik:latest
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.smtp.address=:25"
+      - "--entrypoints.mysql.address=:3306"
+    ports:
+      - "80:80"
+      - "25:25"
+      - "8080:8080"
+      - "3306:3306"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - lukaszstaniszewski.dev
+
+networks:
+  lukaszstaniszewski.dev:

@@ -1,0 +1,62 @@
+version: '3'
+
+services:
+  app_1:
+    image: nginx:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app_1.rule=Host(`app_1.localhost`)"
+      - "traefik.http.routers.app_1.entrypoints=web"
+    volumes:
+        - '../app_1/:/usr/share/nginx/html'
+    networks:
+      - lukaszstaniszewski.dev
+
+  app_2:
+    image: nginx:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app_2.rule=Host(`app_2.localhost`)"
+      - "traefik.http.routers.app_2.entrypoints=web"
+    volumes:
+      - '../app_2/:/usr/share/nginx/html'
+    networks:
+      - lukaszstaniszewski.dev
+
+  whoami:
+    image: traefik/whoami
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+    networks:
+      - lukaszstaniszewski.dev
+
+  mailer:
+    image: schickling/mailcatcher
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailcatcher_web.rule=Host(`mailcatcher.localhost`)"
+      - "traefik.http.routers.mailcatcher_web.entrypoints=web"
+      - "traefik.http.services.mailcatcher_web.loadbalancer.server.port=1080"
+
+      - "traefik.tcp.routers.mailcatcher_smtp.entrypoints=smtp"
+      - "traefik.tcp.routers.mailcatcher_smtp.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mailcatcher_smtp.service=mailcatcher_smtp"
+      - "traefik.tcp.services.mailcatcher_smtp.loadbalancer.server.port=1025"
+    networks:
+      - lukaszstaniszewski.dev
+
+  db_app_1:
+    image: mysql:8.1
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: main
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.db_app_1.entrypoints=mysql"
+      - "traefik.tcp.routers.db_app_1.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.db_app_1.service=db_app_1"
+      - "traefik.tcp.services.db_app_1.loadbalancer.server.port=3306"
+    networks:
+      - lukaszstaniszewski.dev
