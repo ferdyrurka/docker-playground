@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  traefik:
+    image: traefik:latest
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - lukaszstaniszewski.dev
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - './:/app'
+      - '.docker/site.conf:/etc/nginx/conf.d/default.conf'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.rule=Host(`nginx.localhost`)"
+      - "traefik.http.routers.nginx.entrypoints=web"
+    depends_on:
+      - fpm
+    networks:
+      - lukaszstaniszewski.dev
+
+  fpm:
+    image: php:8.2-fpm-alpine3.18
+    depends_on:
+      - traefik
+    volumes:
+      - './:/app'
+    networks:
+      - lukaszstaniszewski.dev
+
+  varnish:
+    image: varnish:alpine
+    depends_on:
+      - nginx
+    volumes:
+      - .docker/varnish.vcl:/etc/varnish/default.vcl
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.varnish.rule=Host(`varnish.localhost`)"
+      - "traefik.http.routers.varnish.entrypoints=web"
+    networks:
+      - lukaszstaniszewski.dev
+
+networks:
+  lukaszstaniszewski.dev:
