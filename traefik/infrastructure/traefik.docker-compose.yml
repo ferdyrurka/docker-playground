@@ -1,23 +1,19 @@
 version: '3'
 
 services:
-
   traefik:
     image: traefik:latest
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.smtp.address=:25"
-      - "--entrypoints.mysql.address=:3306"
     ports:
       - "80:80"
+      - "443:443"
       - "25:25"
       - "8080:8080"
       - "3306:3306"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "../config/traefik.yml:/etc/traefik/traefik.yml:ro"
+      - "../config/dynamic.yml:/etc/traefik/dynamic.yml:ro"
+      - "../certs:/etc/certs:ro"
     networks:
       - lukaszstaniszewski.dev
 

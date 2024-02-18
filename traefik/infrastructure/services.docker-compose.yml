@@ -3,10 +3,14 @@ version: '3'
 services:
   app_1:
     image: nginx:latest
+    depends_on:
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.app_1.rule=Host(`app_1.localhost`)"
       - "traefik.http.routers.app_1.entrypoints=web"
+      - "traefik.http.routers.app_1.entrypoints=websecure"
+      - "traefik.http.routers.app_1.tls=true"
     volumes:
         - '../app_1/:/usr/share/nginx/html'
     networks:
@@ -14,10 +18,14 @@ services:
 
   app_2:
     image: nginx:latest
+    depends_on:
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.app_2.rule=Host(`app_2.localhost`)"
       - "traefik.http.routers.app_2.entrypoints=web"
+      - "traefik.http.routers.app_2.entrypoints=websecure"
+      - "traefik.http.routers.app_2.tls=true"
     volumes:
       - '../app_2/:/usr/share/nginx/html'
     networks:
@@ -25,23 +33,33 @@ services:
 
   whoami:
     image: traefik/whoami
+    depends_on:
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
       - "traefik.http.routers.whoami.entrypoints=web"
+      #Not generated TLS
+      - "traefik.http.routers.whoami.tls=true"
     networks:
       - lukaszstaniszewski.dev
 
   mailer:
     image: schickling/mailcatcher
+    depends_on:
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.mailcatcher_web.rule=Host(`mailcatcher.localhost`)"
       - "traefik.http.routers.mailcatcher_web.entrypoints=web"
+      - "traefik.http.routers.mailcatcher_web.entrypoints=websecure"
       - "traefik.http.services.mailcatcher_web.loadbalancer.server.port=1080"
+      - "traefik.http.routers.mailcatcher_web.tls=true"
 
       - "traefik.tcp.routers.mailcatcher_smtp.entrypoints=smtp"
-      - "traefik.tcp.routers.mailcatcher_smtp.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mailcatcher_smtp.rule=HostSNI(`mailcatcher.localhost`)"
+      - "traefik.tcp.routers.mailcatcher_smtp.tls=true"
+      - "traefik.tcp.routers.mailcatcher_smtp.tls.passthrough=true"
       - "traefik.tcp.routers.mailcatcher_smtp.service=mailcatcher_smtp"
       - "traefik.tcp.services.mailcatcher_smtp.loadbalancer.server.port=1025"
     networks:
@@ -52,11 +70,16 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: main
+    depends_on:
+      - traefik
     labels:
       - "traefik.enable=true"
       - "traefik.tcp.routers.db_app_1.entrypoints=mysql"
+      #Not working for MySQL - https://github.com/traefik/traefik/issues/5155
       - "traefik.tcp.routers.db_app_1.rule=HostSNI(`*`)"
       - "traefik.tcp.routers.db_app_1.service=db_app_1"
+      - "traefik.tcp.routers.db_app_1.tls=true"
+      - "traefik.tcp.routers.db_app_1.tls.passthrough=true"
       - "traefik.tcp.services.db_app_1.loadbalancer.server.port=3306"
     networks:
       - lukaszstaniszewski.dev
